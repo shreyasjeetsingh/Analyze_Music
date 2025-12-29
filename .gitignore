@@ -1,0 +1,8 @@
+.venv/
+Some Songs/
+*.flac
+*.mp3
+*.wav
+*.ogg
+__pycache__/
+*.pyc

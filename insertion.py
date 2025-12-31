@@ -3,6 +3,7 @@ import numpy as np
 import sqlite3
 import pickle
 import os
+from mutagen import File
 
 conn = sqlite3.connect("songs.db")
 cur = conn.cursor()
@@ -10,6 +11,8 @@ cur.execute("""
             CREATE TABLE IF NOT EXISTS songs(
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             path TEXT UNIQUE,
+            name TEXT,
+            artist TEXT,
             features BLOB
             )
             """)
@@ -70,13 +73,25 @@ def songAnalysis(y, sr):
     return feature_vector
 
 
-def store_song(path, feature_vector):
+def store_song(path, name, artist, feature_vector):
     blob = pickle.dumps(feature_vector)
     cur.execute(
-        "INSERT OR IGNORE INTO songs (path, features) VALUES(?, ?)",
-        (path, blob)
+        "INSERT OR IGNORE INTO songs (path, name, artist, features) VALUES(?, ?, ?, ?)",
+        (path, name, artist, blob)
     )
     conn.commit()
+
+
+def get_song_metadata(path):
+    audio = File(path, easy=True)
+    if audio is None:
+        return None, None
+    
+    title = audio.get("title", [None])[0]
+    artist = audio.get("artist", [None])[0]
+
+    return title, artist
+
 
 if __name__ == "__main__":
     song_folder = "SomeSongs"
@@ -85,7 +100,8 @@ if __name__ == "__main__":
             continue
         path = os.path.join(song_folder, fname)
         y, sr = librosa.load(path)
+        name, artist = get_song_metadata(path)
         features = songAnalysis(y, sr)
-        store_song(path, features)
+        store_song(path, name, artist, features)
     print("Done Inserting")
     conn.close()

@@ -6,3 +6,4 @@ Some Songs/
 *.ogg
 __pycache__/
 *.pyc
+*.db

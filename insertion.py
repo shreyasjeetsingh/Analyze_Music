@@ -78,16 +78,14 @@ def store_song(path, feature_vector):
     )
     conn.commit()
 
-
-song_folder = "SomeSongs"
-for fname in os.listdir(song_folder):
-    if not fname.lower().endswith((".flac")):
-        continue
-    path = os.path.join(song_folder, fname)
-    y, sr = librosa.load(path)
-    features = songAnalysis(y, sr)
-    store_song(path, features)
-print("Done Inserting")
-
-
-conn.close()
+if __name__ == "__main__":
+    song_folder = "SomeSongs"
+    for fname in os.listdir(song_folder):
+        if not fname.lower().endswith((".flac")):
+            continue
+        path = os.path.join(song_folder, fname)
+        y, sr = librosa.load(path)
+        features = songAnalysis(y, sr)
+        store_song(path, features)
+    print("Done Inserting")
+    conn.close()

@@ -7,3 +7,4 @@ Some Songs/
 __pycache__/
 *.pyc
 *.db
+songs.db

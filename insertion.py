@@ -1,5 +1,20 @@
 import librosa
 import numpy as np
+import sqlite3
+import pickle
+import os
+
+conn = sqlite3.connect("songs.db")
+cur = conn.cursor()
+cur.execute("""
+            CREATE TABLE IF NOT EXISTS songs(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            path TEXT UNIQUE,
+            features BLOB
+            )
+            """)
+conn.commit()
+
 
 def songAnalysis(y, sr):
     tempo, beats = librosa.beat.beat_track(y=y, sr=sr)
@@ -55,38 +70,24 @@ def songAnalysis(y, sr):
     return feature_vector
 
 
-paths = [
-    r"Some Songs\Imaginary Friend - ITZY.flac",
-    r"Some Songs\04 - 1-800-hot-n-fun.flac",
-    r"Some Songs\06 - Love Is Lonely.flac"
-]
+def store_song(path, feature_vector):
+    blob = pickle.dumps(feature_vector)
+    cur.execute(
+        "INSERT OR IGNORE INTO songs (path, features) VALUES(?, ?)",
+        (path, blob)
+    )
+    conn.commit()
 
-vectors = []
 
-for p in paths:
-    y, sr = librosa.load(p)
-    v = songAnalysis(y, sr)
-    vectors.append(v)
+song_folder = "SomeSongs"
+for fname in os.listdir(song_folder):
+    if not fname.lower().endswith((".flac")):
+        continue
+    path = os.path.join(song_folder, fname)
+    y, sr = librosa.load(path)
+    features = songAnalysis(y, sr)
+    store_song(path, features)
+print("Done Inserting")
 
-X = np.vstack(vectors)
 
-mu = X.mean(axis=0)
-sigma = X.std(axis=0)
-sigma[sigma == 0] = 1.0   # avoid division by zero
-
-X_norm = (X - mu) / sigma
-
-from sklearn.metrics.pairwise import cosine_similarity
-S = cosine_similarity(X_norm)
-
-pairs = []
-n = len(paths)
-for i in range(n):
-    for j in range(i + 1, n):
-        pairs.append((i, j, S[i, j]))
-
-# sort by similarity descending
-pairs.sort(key=lambda x: x[2], reverse=True)
-
-for i, j, sim in pairs:
-    print(f"{paths[i]} and {paths[j]} are similar with value {sim:.3f}")
+conn.close()

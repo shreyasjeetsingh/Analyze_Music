@@ -19,6 +19,7 @@ def init_db():
             features BLOB
         )
         """)
+        conn.commit()
 
 def insert_song(path, name, artist, features):
     with get_connection() as conn:
@@ -38,6 +39,10 @@ def load_songs():
         artists.append(a)
         vectors.append(pickle.loads(b))
     
-    X = np.vstack(vectors)
+    if vectors:
+        X = np.vstack(vectors)
+    else:
+        X = np.empty((0,))
+
     
     return paths, names, artists, X

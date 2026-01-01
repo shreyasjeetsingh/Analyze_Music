@@ -19,9 +19,13 @@ def insert_folder(folder):
                 features = songAnalysis(y, sr)
 
                 audio = File(path, easy=True)
-                title = audio.get("title", [os.path.basename(path)])[0] if audio else os.path.basename(path)
+                if audio and "title" in audio:
+                    title = audio["title"][0]
+                else:
+                    title = os.path.splitext(os.path.basename(path))[0]
                 artist = audio.get("artist", ["Unknown"])[0] if audio else "Unknown"
 
                 insert_song(path, title, artist, features)
+                
             except Exception as e:
                 print(f"Failed: {path} — {e}")

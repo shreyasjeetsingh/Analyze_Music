@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import filedialog
 import librosa
+from app.core.database import init_db
 from app.core.analysis import songAnalysis
 from app.core.database import load_songs
 from app.core.insert import insert_folder
@@ -9,6 +10,7 @@ from app.core.similarity import compute_similarity
 class MainView(tk.Frame):
     def __init__(self, parent):
         super().__init__(parent)
+        init_db()
         self.paths, self.names, self.artists, self.X = load_songs()
 
         tk.Label(self, text="Song name: ").pack()
@@ -59,7 +61,9 @@ class MainView(tk.Frame):
 
         insert_folder(folder)
 
-        self.names, self.artists, self.paths, self.X = load_songs()
+        self.paths, self.names, self.artists, self.X = load_songs()
 
         self.output.delete("1.0", "end")
         self.output.insert("end", "Done adding songs.\n")
+        print("Reloaded:", len(self.names), "songs")
+        print("Sample names:", self.names[:5])

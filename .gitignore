@@ -8,3 +8,4 @@ __pycache__/
 *.pyc
 *.db
 data/songs.db
+test.py

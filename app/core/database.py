@@ -42,7 +42,7 @@ def load_songs():
     if vectors:
         X = np.vstack(vectors)
     else:
-        X = np.empty((0,))
+        X = np.zeros((0, 125))
 
     
     return paths, names, artists, X

@@ -25,11 +25,7 @@ class MainView(tk.Frame):
         tk.Button(self, text="Add Music Folder", command=self.add_folder).pack(pady=5)
 
     def search(self):
-        song = self.entry.get()
-
-        self.output.delete("1.0", "end")
-        self.output.insert("end", "Finding similar songs...\n")
-        self.update_idletasks()
+        song = self.entry.get().strip()
 
         if song not in self.names:
             self.output.delete("1.0", "end")
@@ -37,18 +33,22 @@ class MainView(tk.Frame):
             return
         
         idx = self.names.index(song)
-        path = self.paths[idx]
-
-        y, sr = librosa.load(path)
-        q = songAnalysis(y, sr)
+        q = self.X[idx]
 
         sims = compute_similarity(q, self.X)
         order = sims.argsort()[::-1]
 
         self.output.delete("1.0", "end")
-        self.output.insert("end", f"Query: {song}\n\n")
-        for i in order[:5]:
+        self.output.insert("end", f"Query: {song}\n")
+        self.output.insert("end", "="*40 + "\n")
+
+        count = 0
+        for i in order:
+            if i == idx: continue
+
             self.output.insert("end", f"{self.artists[i]} - {self.names[i]} ({sims[i]:.3f})\n")
+            count += 1
+            if count >= 5: break 
     
     def add_folder(self):
         folder = filedialog.askdirectory(title="Select Music Folder")

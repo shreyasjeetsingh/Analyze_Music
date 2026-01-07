@@ -1,40 +1,82 @@
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 
-GROUP_WEIGHTS = {
-    "tempo": 1.3,
-    "rms": 0.8,
-    "mfcc": 1.8,       
-    "delta_mfcc": 1.2,
-    "centroid": 0.7,
-    "flatness": 0.6,
-    "contrast": 1.0,
-    "chroma": 1.5,     
-    "tonnetz": 1.2,
-    "zcr": 0.6,
-    "rolloff": 0.7,
-    "bandwidth": 0.7,
-    "tempogram": 1.0
+GROUP_INFLUENCE = {
+    "timbre": 0.40,
+    "harmony": 0.25,
+    "rhythm": 0.20,
+    "texture": 0.15,
+}
+
+FEATURE_SIZES = {
+    "tempo": 1,
+    "rms": 2,
+    "mfcc": 40,
+    "delta_mfcc": 20,
+    "centroid": 2,
+    "flatness": 2,
+    "contrast": 14,
+    "chroma": 24,
+    "tonnetz": 12,
+    "zcr": 2,
+    "rolloff": 2,
+    "bandwidth": 2,
+    "tempogram": 2,
+}
+
+FEATURE_GROUP = {
+    "mfcc": "timbre",
+    "delta_mfcc": "timbre",
+    "rms": "timbre",
+
+    "chroma": "harmony",
+    "tonnetz": "harmony",
+
+    "tempo": "rhythm",
+    "tempogram": "rhythm",
+
+    "centroid": "texture",
+    "flatness": "texture",
+    "contrast": "texture",
+    "rolloff": "texture",
+    "bandwidth": "texture",
+    "zcr": "texture",
 }
 
 def build_weight_vector(feature_dim):
     w = []
-    w += [GROUP_WEIGHTS["tempo"]] * 1
-    w += [GROUP_WEIGHTS["rms"]] * 2
-    w += [GROUP_WEIGHTS["mfcc"]] * 40
-    w += [GROUP_WEIGHTS["delta_mfcc"]] * 20
-    w += [GROUP_WEIGHTS["centroid"]] * 2
-    w += [GROUP_WEIGHTS["flatness"]] * 2
-    w += [GROUP_WEIGHTS["contrast"]] * 14
-    w += [GROUP_WEIGHTS["chroma"]] * 24
-    w += [GROUP_WEIGHTS["tonnetz"]] * 12
-    w += [GROUP_WEIGHTS["zcr"]] * 2
-    w += [GROUP_WEIGHTS["rolloff"]] * 2
-    w += [GROUP_WEIGHTS["bandwidth"]] * 2
-    w += [GROUP_WEIGHTS["tempogram"]] * 2
+    
+    group_dims = {}
+    for feat, grp in FEATURE_GROUP.items():
+        group_dims[grp] = group_dims.get(grp, 0)  + FEATURE_SIZES[feat]
+
+    feature_order = [
+        "tempo", "rms", "mfcc", "delta_mfcc",
+        "centroid", "flatness", "contrast",
+        "chroma", "tonnetz",
+        "zcr", "rolloff", "bandwidth", "tempogram"
+    ]
+
+    for feat in feature_order:
+        grp = FEATURE_GROUP.get(feat)
+        if grp is None:
+            raise ValueError(f"Feature {feat} not assigned to any group")
+        
+        base_w = GROUP_INFLUENCE[grp]/group_dims[grp]
+
+        if feat == "mfcc":
+            decay = np.exp(-0.05 * np.arange(FEATURE_SIZES[feat]))
+            group_vals = base_w * decay * (FEATURE_SIZES[feat] / np.sum(decay))
+            w.extend(group_vals.tolist())
+        else:
+            w.extend([base_w] * FEATURE_SIZES[feat])
 
     W = np.array(w)
-    assert W.shape[0] == feature_dim, f"Weight vector length {W.shape[0]} != feature length {feature_dim}"    
+
+    assert W.shape[0] == feature_dim, (
+        f"Weight vector length {W.shape[0]} != feature length {feature_dim}"
+    )
+
     return W
 
 
@@ -53,3 +95,4 @@ def compute_similarity(query_vec, X):
 
     sims = cosine_similarity([qw], Xw)[0]
     return sims
+

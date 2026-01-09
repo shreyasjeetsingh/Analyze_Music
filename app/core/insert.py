@@ -2,8 +2,6 @@ import os
 import librosa
 from mutagen import File
 from concurrent.futures import ProcessPoolExecutor
-
-# --- CRITICAL: Make sure these imports match what is in database.py ---
 from app.core.database import insert_batch, get_existing_paths
 from app.core.analysis import songAnalysis
 
@@ -15,7 +13,6 @@ def process_one_song(path):
     Returns a tuple: (path, title, artist, features) or None if failed.
     """
     try:
-        # Optimization: sr=22050 standardizes sample rate for faster loading
         y, sr = librosa.load(path, sr=22050)
         
         features = songAnalysis(y, sr)
@@ -25,7 +22,6 @@ def process_one_song(path):
         artist = "Unknown"
         
         if audio:
-            # Metadata fallback logic
             title = audio.get("title", [os.path.splitext(os.path.basename(path))[0]])[0]
             artist = audio.get("artist", ["Unknown"])[0]
         else:
@@ -39,8 +35,7 @@ def process_one_song(path):
 
 def scan_library_parallel(folder_path, progress_callback=None):
     print("Fetching existing songs from DB...")
-    
-    # This calls the function you defined in database.py
+
     existing_paths = get_existing_paths()
     
     files_to_process = []
@@ -49,7 +44,6 @@ def scan_library_parallel(folder_path, progress_callback=None):
         for fname in files:
             if fname.lower().endswith(SUPPORTED):
                 full_path = os.path.join(root, fname)
-                # Skip if already in database
                 if full_path not in existing_paths:
                     files_to_process.append(full_path)
     
@@ -80,7 +74,6 @@ def scan_library_parallel(folder_path, progress_callback=None):
             if progress_callback:
                 progress_callback(i, total)
 
-    # Insert leftovers
     if current_batch:
         insert_batch(current_batch)
         print("Final batch saved.")

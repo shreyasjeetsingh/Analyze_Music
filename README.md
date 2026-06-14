@@ -2,8 +2,6 @@
  
 A Python tool that builds playlists based on the "vibe" of a single song you pick. Give it one track, and it analyzes audio features to find and recommend similar songs from your local music library.
  
-> ⚠️ **Status:** Work in progress — this is currently a working prototype, not a finished product.
- 
 ## How It Works
  
 1. Scans your local music library and reads track metadata.

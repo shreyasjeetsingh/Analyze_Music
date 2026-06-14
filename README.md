@@ -17,14 +17,24 @@ A Python tool that builds playlists based on the "vibe" of a single song you pic
 - Cosine similarity-based recommendation engine
 - Simple GUI for interacting with the app
 ## Project Structure
- 
+
 ```
 Analyze_Music/
-├── app/                # Core application code (GUI, analysis logic)
-├── main.py             # Entry point — launches the app
-├── requirements.txt    # Python dependencies
+├── app/
+│   ├── core/
+│   │   ├── analysis.py     # Audio feature extraction logic
+│   │   ├── database.py     # Database setup and queries
+│   │   ├── insert.py        # Inserts track data/features into the database
+│   │   └── similarity.py    # Cosine similarity computation
+│   └── gui/                 # GUI components
+├── data/
+│   └── songs.db             # Local database of tracks and features
+├── main.py                  # Entry point - launches the app
+├── test.py                  # Tests
+├── requirements.txt         # Python dependencies
 └── .gitignore
 ```
+
  
 ## Getting Started
  
